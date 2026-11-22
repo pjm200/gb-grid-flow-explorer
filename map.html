@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Grid Flow Explorer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9 1 3 9h4l-1 6 6-8H8z' fill='%23ffb020'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+<script>window.GBGFE_STATIC = true;</script>
+</head>
+<body class="mappage">
+<header class="topbar">
+  <a class="brand" href="index.html" title="Back to the weather page">⚡ GB Grid Flow Explorer</a>
+  <span id="wxSummary" class="wx"></span>
+  <span id="busy" class="busy hidden"><span class="spinner"></span> Solving the day…</span>
+  <span class="spacer"></span>
+  <button id="aboutBtn" class="btn">About the model</button>
+  <a id="weatherBtn" class="btn" href="index.html">Weather</a>
+</header>
+
+<div class="app">
+  <aside class="panel left">
+    <section>
+      <h3>Layers <span class="hint">show · include · solo</span></h3>
+      <div id="layers"></div>
+      <div class="row2"><button id="allOn" class="btn small">All on</button><button id="allOff" class="btn small">All off</button></div>
+      <h3>Overlays</h3>
+      <div id="overlays"></div>
+      <h3>System</h3>
+      <label class="check"><input type="checkbox" id="lockIc"> Lock interconnectors at 0</label>
+      <label class="check"><input type="checkbox" id="showAll"> Show all ETYS boundaries</label>
+      <label class="check"><input type="checkbox" id="enforceOpt"> Enforce optional boundaries (B2, B5, SC1, B13)</label>
+      <label class="check"><input type="checkbox" id="cbPalette"> Colour-blind palette</label>
+    </section>
+    <section class="missions-box">
+      <h3 id="missionsHead" class="collapsible">Missions <span id="missionCount" class="pill"></span></h3>
+      <div id="missions"></div>
+    </section>
+  </aside>
+
+  <main id="mapcol" class="mapcol">
+    <canvas id="map" aria-label="Map of the GB transmission system"></canvas>
+    <div id="tooltip" class="tooltip"></div>
+    <div id="card" class="card hidden"></div>
+    <div class="maptools"><button id="resetView" class="icon" title="Reset view"></button></div>
+    <div class="maphelp dim">scroll to zoom · drag to pan · click anything</div>
+    <div id="toasts" class="toasts"></div>
+  </main>
+
+  <aside class="panel right">
+    <h3>Boundaries <span class="hint">flow / capability</span></h3>
+    <div id="bars" class="bars"><p class="dim">Solving…</p></div>
+    <p class="dim small">Bar = |flow| ÷ capability (the tick is 100%). The striped ghost is what the market wanted. Click a boundary for its explainer.</p>
+    <h3>Today so far</h3>
+    <div id="counters"></div>
+  </aside>
+
+  <footer class="bottom">
+    <div class="controls">
+      <button id="startBtn" class="icon" title="Jump to start (Home)"></button>
+      <button id="backBtn" class="icon" title="Step back (←)"></button>
+      <button id="playBtn" class="icon play" title="Play (space)"></button>
+      <button id="fwdBtn" class="icon" title="Step forward (→)"></button>
+      <button id="endBtn" class="icon" title="Jump to end (End)"></button>
+      <button id="loopBtn" class="icon" title="Loop the day"></button>
+      <label class="speed">Speed <input type="range" id="speed" min="-2" max="4" step="1" value="0"> <span id="speedLabel" class="mono">1×</span></label>
+      <span id="clock" class="clock mono">17:00</span>
+      <span id="spLabel" class="sp mono"></span>
+      <span class="spacer"></span>
+      <span id="sun" class="sun mono"></span>
+    </div>
+    <div id="chartwrap" class="chartwrap"><canvas id="chart" title="Click or drag to jump to a time"></canvas></div>
+    <div id="chartLegend" class="chart-legend"></div>
+  </footer>
+</div>
+
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="modal-box">
+    <button class="icon close" data-close title="Close">✕</button>
+    <h2 id="aboutTitle">About the model</h2>
+    <p>This is a teaching model, not an operational tool. It shows <em>why</em> boundaries constrain, using real boundary lines and capabilities but simplified everything else.</p>
+    <h4>How it works</h4>
+    <ul>
+      <li><b>Boundary-cut transport model.</b> The flow across a boundary equals the net injection on one side: generation + storage discharge − charging + imports − demand. Network topology inside each side is ignored. This is not an AC power flow.</li>
+      <li><b>Whole-day linear programme</b>, solved twice. The "market" pass ignores boundaries (a copper plate). The "constrained" pass adds the boundary limits. The difference between them is the constraint actions, and the extra cost is the constraint cost.</li>
+      <li>Wind and solar can be turned down at a cost that stands for lost subsidy (£60/MWh wind, £30/MWh solar), so the model curtails only when it has to.</li>
+    </ul>
+    <h4>Simplifications to keep in mind</h4>
+    <ul>
+      <li>Boundary capabilities are ETYS 2025 <b>winter-peak</b> values. Summer uses an <b>assumed derate</b> (0.90 by default), and the reverse-direction limit is <b>assumed equal</b> to the forward limit.</li>
+      <li>Prices (fuel, interconnector markets, curtailment) are <b>illustrative</b>, set in <code>config/*.yaml</code>.</li>
+      <li>Weather is <b>synthetic</b>: one pad position gives smooth, seeded variation in wind and cloud across the country.</li>
+      <li><b>No unit commitment</b> or minimum stable generation, except that nuclear must run at 85% or more.</li>
+      <li>Plant comes from <b>REPD</b> (wind, solar, batteries) and <b>DUKES 5.11</b> (gas, biomass, nuclear, pumped storage). Which farms count as transmission-connected uses connection-voltage thresholds by area plus DUKES' own HV/LV flag, so a few may be on the wrong side of that line. Offshore landing points come from the spec's list where known, otherwise the nearest coast. Demand is split across 49 hand-made regions (shares estimated); embedded wind and solar are placed where REPD says those farms are.</li>
+      <li>Internal HVDC links (Western Link etc.) do not change boundary totals in a cut model; their animated flow is a display share of the boundary flow.</li>
+    </ul>
+    <h4>Data</h4>
+    <p class="small"><b>All data used is publicly available.</b> Every dataset below is published openly by a public body or
+      public project, free to download and reuse (including commercially) under the licence shown, provided the source is
+      acknowledged, as it is here. No personal, confidential or paid-for data is used. Note that "openly licensed" is not
+      quite the same as "public domain": only Natural Earth is public domain; the others require this attribution.</p>
+    <table class="kv data-table">
+      <tr><th>Used for</th><th>Dataset (publisher)</th><th>Licence</th></tr>
+      <tr><td>Boundary lines</td><td><a href="https://www.neso.energy/data-portal/etys-gb-transmission-system-boundaries" target="_blank" rel="noopener">ETYS GB Transmission System Boundaries</a> (NESO)</td><td><a href="https://www.neso.energy/data-portal/ngeso-open-licence" target="_blank" rel="noopener">NESO Open Data Licence</a></td></tr>
+      <tr><td>Boundary capabilities, limiting circuits</td><td><a href="https://www.neso.energy/publications/electricity-ten-year-statement-etys" target="_blank" rel="noopener">Electricity Ten Year Statement 2025</a> (NESO)</td><td>Published report; figures quoted with attribution</td></tr>
+      <tr><td>Demand profiles, embedded wind and solar capacity</td><td><a href="https://www.neso.energy/data-portal/historic-demand-data" target="_blank" rel="noopener">Historic Demand Data 2025</a> (NESO)</td><td><a href="https://www.neso.energy/data-portal/ngeso-open-licence" target="_blank" rel="noopener">NESO Open Data Licence</a></td></tr>
+      <tr><td>Cross-check of offshore wind status</td><td><a href="https://www.neso.energy/data-portal/transmission-entry-capacity-tec-register" target="_blank" rel="noopener">TEC Register, 19 Nov 2026</a> (NESO)</td><td><a href="https://www.neso.energy/data-portal/ngeso-open-licence" target="_blank" rel="noopener">NESO Open Data Licence</a></td></tr>
+      <tr><td>Wind, solar and battery sites</td><td><a href="https://www.gov.uk/government/publications/renewable-energy-planning-database-quarterly-extract" target="_blank" rel="noopener">Renewable Energy Planning Database, Oct 2026</a> (DESNZ)</td><td><a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" target="_blank" rel="noopener">Open Government Licence v3.0</a></td></tr>
+      <tr><td>Gas, biomass, nuclear and pumped-storage stations</td><td><a href="https://www.gov.uk/government/statistics/electricity-chapter-5-digest-of-united-kingdom-energy-statistics-dukes" target="_blank" rel="noopener">DUKES 2026 table 5.11, Power stations in the UK</a> (DESNZ)</td><td><a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" target="_blank" rel="noopener">Open Government Licence v3.0</a></td></tr>
+      <tr><td>Coastlines and neighbouring countries</td><td><a href="https://www.naturalearthdata.com/downloads/10m-cultural-vectors/" target="_blank" rel="noopener">Natural Earth, Admin 0 map units 1:10m</a></td><td><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener">Public domain</a></td></tr>
+    </table>
+    <p class="small dim">Contains public sector information licensed under the Open Government Licence v3.0, and data from the National
+      Energy System Operator (NESO) under the NESO Open Data Licence. Not from these sources, and illustrative only: fuel and
+      neighbouring-market prices, curtailment costs, the synthetic weather, the regional demand split, interconnector and some
+      offshore landing points (approximate, from the tool's specification), and pumped-storage energy. The tool is not
+      endorsed by NESO or DESNZ.</p>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
