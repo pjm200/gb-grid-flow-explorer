@@ -184,6 +184,7 @@ function bindControls() {
   $("soc").value = req.start_soc; $("soc").addEventListener("input", (e) => { req.start_soc = +e.target.value; update(); });
   if (req.front || req.seed || req.summer_derate !== 0.9 || req.start_soc !== 0.5) document.querySelector("details.adv").open = true;
   $("go").addEventListener("click", simulate);
+  $("noticeLink").addEventListener("click", () => { $("noticeLink").href = "map.html?" + paramsFromReq(req) + "#about"; });
   $("overlayClose").addEventListener("click", () => { $("overlay").classList.add("hidden"); spinning = false; });
 }
 

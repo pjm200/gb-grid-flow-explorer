@@ -568,7 +568,8 @@ function buildControls() {
   setCollapsed(store.get("gbgfe.missionsCollapsed", false));
   mh.onclick = () => setCollapsed(!mh.parentElement.classList.contains("collapsed"));
 
-  $("aboutBtn").onclick = () => $("modal").classList.remove("hidden");
+  $("aboutBtn").onclick = $("noticeBtn").onclick = () => $("modal").classList.remove("hidden");
+  if (location.hash === "#about") $("modal").classList.remove("hidden");   // from the weather page's notice
   $("modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.closest("[data-close]")) $("modal").classList.add("hidden"); });
 
   $("chartLegend").innerHTML = MIX_LAYERS.map(([, l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join("") +
