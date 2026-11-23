@@ -1,0 +1,83 @@
+{
+ "pyodide_version": "0.29.5",
+ "cdn": "https://cdn.jsdelivr.net/pyodide/v0.29.5/full/",
+ "packages": [
+  "numpy",
+  "scipy",
+  "pandas",
+  "pyyaml",
+  "pydantic"
+ ],
+ "stdlib": {
+  "path": "stdlib.b64.txt",
+  "sha256": "831fd1e535084b972f87c6a35275de3d236efd5166f5e77ce89497710635e73c",
+  "bytes": 2424003
+ },
+ "wheels": {
+  "numpy-2.2.5-cp313-cp313-pyemscripten_2025_0_wasm32.whl": {
+   "path": "wheels/numpy-2.2.5-cp313-cp313-pyemscripten_2025_0_wasm32.whl.b64.txt",
+   "sha256": "800c98edc0c864dfa49f07005680c699b4b42b84eae1f8cb19d35b3634e7f05c",
+   "bytes": 2823762
+  },
+  "scipy-1.14.1-cp313-cp313-pyemscripten_2025_0_wasm32.whl": {
+   "path": "wheels/scipy-1.14.1-cp313-cp313-pyemscripten_2025_0_wasm32.whl.b64.txt",
+   "sha256": "7a60ad5e52acd8d8059f4acc0932d701c3e07723d82e567523dd1a6e0e85ec3e",
+   "bytes": 16426457
+  },
+  "pandas-2.3.3-cp313-cp313-pyemscripten_2025_0_wasm32.whl": {
+   "path": "wheels/pandas-2.3.3-cp313-cp313-pyemscripten_2025_0_wasm32.whl.b64.txt",
+   "sha256": "2579a3d8e9f040421836365ccf7886fc4054c87381d4d481840a97785cd78923",
+   "bytes": 4493372
+  },
+  "pyyaml-6.0.2-cp313-cp313-pyemscripten_2025_0_wasm32.whl": {
+   "path": "wheels/pyyaml-6.0.2-cp313-cp313-pyemscripten_2025_0_wasm32.whl.b64.txt",
+   "sha256": "20b40e900704ae4e204a9978d9806f148205df4cbdf44b5eb73a189254a72757",
+   "bytes": 110625
+  },
+  "pydantic-2.12.5-py3-none-any.whl": {
+   "path": "wheels/pydantic-2.12.5-py3-none-any.whl.b64.txt",
+   "sha256": "453523330094d7d47780b540c12580e8e743ea34c5aa4205e43577655c39ca23",
+   "bytes": 463581
+  },
+  "python_dateutil-2.9.0.post0-py2.py3-none-any.whl": {
+   "path": "wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl.b64.txt",
+   "sha256": "1fe3a0346ef21bc85b295227256d6aed72aa8116178b019fc5ae5d57fbd213cf",
+   "bytes": 229892
+  },
+  "pytz-2025.2-py2.py3-none-any.whl": {
+   "path": "wheels/pytz-2025.2-py2.py3-none-any.whl.b64.txt",
+   "sha256": "d7fb2f11cf7f8dd17e652d5494189f520ee086e9fc71aef4cbb978f5dcfc2878",
+   "bytes": 509225
+  },
+  "typing_extensions-4.15.0-py3-none-any.whl": {
+   "path": "wheels/typing_extensions-4.15.0-py3-none-any.whl.b64.txt",
+   "sha256": "42190f892f6219350c50e107954f57cb6196acac818fece4a7d21689c94f71de",
+   "bytes": 44613
+  },
+  "pydantic_core-2.41.5-cp313-cp313-pyemscripten_2025_0_wasm32.whl": {
+   "path": "wheels/pydantic_core-2.41.5-cp313-cp313-pyemscripten_2025_0_wasm32.whl.b64.txt",
+   "sha256": "bd76fcb1cc8e93de5c6cb4d0fa0754382d4cbb6d726a1643ce174e1785c40b75",
+   "bytes": 1437921
+  },
+  "annotated_types-0.7.0-py3-none-any.whl": {
+   "path": "wheels/annotated_types-0.7.0-py3-none-any.whl.b64.txt",
+   "sha256": "6a8e8a10986f2f73bf3aa1e63eb807c845bdf97a0fa436dfda1d4e8a81603fb0",
+   "bytes": 11963
+  },
+  "typing_inspection-0.4.2-py3-none-any.whl": {
+   "path": "wheels/typing_inspection-0.4.2-py3-none-any.whl.b64.txt",
+   "sha256": "a00e8bbec6999ab79272b06aaacbeee737ff3c15cb8785b34fd189d35b0c24e0",
+   "bytes": 14610
+  },
+  "six-1.17.0-py2.py3-none-any.whl": {
+   "path": "wheels/six-1.17.0-py2.py3-none-any.whl.b64.txt",
+   "sha256": "bc830cfdc71a224b6d0e4337183a87ea53f21b6623deca5771ee3bc866fd8da2",
+   "bytes": 11050
+  }
+ },
+ "model": {
+  "path": "model.b64.txt",
+  "sha256": "f124a50fd66f7a866c8c00f3f875ee11a7afd2d40b389521b72c69611c25b2e9",
+  "bytes": 125943
+ }
+}

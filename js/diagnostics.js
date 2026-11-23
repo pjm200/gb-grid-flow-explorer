@@ -108,14 +108,18 @@ export async function connectionTest(onStep = () => {}, pyodideVersion = DEFAULT
   try { const r = await fetch("diag/manifest.json", { cache: "no-store" }); if (r.ok) manifest = await r.json(); } catch (e) { /* older build */ }
   const exp = (p) => (manifest && manifest.files && manifest.files[p]) || null;
 
-  await step("pyodide.js (Python loader)", cdn + "pyodide.js", "js");
-  await step("pyodide.asm.wasm (Python runtime)", cdn + "pyodide.asm.wasm", "wasm");
-  await step("python_stdlib.zip (Python standard library)", cdn + "python_stdlib.zip", "zip");
-  const lock = await step("pyodide-lock.json (package list)", cdn + "pyodide-lock.json", "json");
+  // From the CDN (pyodide.js, the runtime and the package list; unchanged):
+  await step("pyodide.js (Python loader, from CDN)", cdn + "pyodide.js", "js");
+  await step("pyodide.asm.wasm (Python runtime, from CDN)", cdn + "pyodide.asm.wasm", "wasm");
+  const lock = await step("pyodide-lock.json (package list, from CDN)", cdn + "pyodide-lock.json", "json");
   const wheel = lock.json && lock.json.packages && lock.json.packages.numpy && lock.json.packages.numpy.file_name;
   delete lock.json;
-  if (wheel) await step(`${wheel} (numpy package)`, cdn + wheel, "zip");
-  await step("py/bundle.zip (this site's model bundle)", "py/bundle.zip", "zip", exp("py/bundle.zip"));
+  if (wheel) await step(`${wheel} (numpy package, from CDN)`, cdn + wheel, "zip");
+  // From this site, as base64 text (what the worker now decodes; these replaced the CDN standard
+  // library and the site's bundle.zip, both of which a work filter was seen blocking):
+  await step("py/stdlib.b64.txt (standard library, this site)", "py/stdlib.b64.txt", "b64zip", exp("py/stdlib.b64.txt"));
+  await step("py/model.b64.txt (model, this site)", "py/model.b64.txt", "b64zip", exp("py/model.b64.txt"));
+  // Probes: the same small zip as .zip, renamed .bin and base64 .txt, to show how a filter decides:
   await step("diag/probe.zip (test file, .zip)", "diag/probe.zip", "zip", exp("diag/probe.zip"));
   await step("diag/probe.bin (same file, renamed .bin)", "diag/probe.bin", "zip", exp("diag/probe.bin"));
   await step("diag/probe.txt (same file, as base64 text)", "diag/probe.txt", "b64zip", exp("diag/probe.txt"));
@@ -123,8 +127,8 @@ export async function connectionTest(onStep = () => {}, pyodideVersion = DEFAULT
 }
 
 // ------------------------------------------------------------------ likely cause
-const START_STAGES = ["start worker", "download pyodide.js", "start Python runtime", "load packages",
-  "download model bundle", "unpack model bundle", "import model"];
+const START_STAGES = ["start worker", "read site settings", "download standard library", "download pyodide.js",
+  "start Python runtime", "load packages", "download model bundle", "unpack model bundle", "import model"];
 
 export function likelyCause({ error, diag, test, env, stalled, mode }) {
   const msg = String((diag && diag.message) || (error && error.message) || "");
@@ -133,7 +137,8 @@ export function likelyCause({ error, diag, test, env, stalled, mode }) {
   const R = {}; (test ? test.results : []).forEach((r) => { R[r.name.split(" ")[0]] = r; });
   const bad = (k) => R[k] && !R[k].ok;
   const good = (k) => R[k] && R[k].ok;
-  const cdnZipBad = bad("python_stdlib.zip") || Object.keys(R).some((k) => k.endsWith(".whl") && bad(k));
+  const wheelKey = Object.keys(R).find((k) => k.endsWith(".whl"));
+  const textBlocked = bad("py/stdlib.b64.txt") || bad("py/model.b64.txt") || bad("diag/probe.txt");
 
   if (mode === "local") {
     if (/failed to fetch|networkerror|load failed/i.test(msg)) return { title: "Could not reach the local server",
@@ -145,29 +150,23 @@ export function likelyCause({ error, diag, test, env, stalled, mode }) {
     fix: "Use another browser or ask IT whether WebAssembly can be allowed for this site. The local tool (run_tool.bat) works without it." };
   if (env && !env.web_worker) return { title: "Python cannot run in this browser", cause: "Web Workers are switched off in this browser.", fix: "Use another browser, or the local tool." };
   if (bad("pyodide.js") || stage === "download pyodide.js") return { title: "Python could not be downloaded",
-    cause: "This network blocks the Python loader from cdn.jsdelivr.net.", fix: "The site could host Python itself on github.io; send the report so that can be tested." };
-  if (test && (cdnZipBad || bad("pyodide.asm.wasm"))) {
-    const what = bad("pyodide.asm.wasm") && !cdnZipBad ? "the Python runtime (.wasm)" : "zip archives from cdn.jsdelivr.net (Python's standard library and packages)";
-    let how, fix;
-    if (bad("diag/probe.zip") && good("diag/probe.bin")) { how = "The same file from this site arrives intact when renamed, so the filter blocks by file extension (.zip)."; fix = "Serve renamed copies of Python's files from this site."; }
-    else if (bad("diag/probe.zip") && bad("diag/probe.bin") && good("diag/probe.txt")) { how = "Zip files from this site are blocked even when renamed, but arrive intact as text, so the filter inspects file content."; fix = "Serve Python's files encoded as text and decode them in the browser."; }
-    else if (good("diag/probe.zip")) { how = "The same kind of file from github.io arrives intact, so only cdn.jsdelivr.net is affected."; fix = "Host Python's files on github.io with the site."; }
-    else { how = "Files from this site are affected too."; fix = "Send the report; the local tool (run_tool.bat) works offline in the meantime."; }
-    return { title: "Python could not start in this browser", cause: `This network blocks or alters ${what}. ${how}`, fix };
+    cause: "This network blocks the Python loader (pyodide.js) from cdn.jsdelivr.net.", fix: "The site could host Python's loader on github.io too; send the report so that can be set up." };
+  // The standard library and the model now come from this site as base64 text. If even that text is
+  // blocked, the usual fix (serving code as text) has already been defeated.
+  if (bad("py/stdlib.b64.txt") || stage === "download standard library") {
+    if (textBlocked) return { title: "This network blocks the site's files", cause: "Even plain-text copies of the files from this site (github.io) are being blocked or altered, so the page cannot assemble Python.", fix: "This usually means github.io itself is restricted here. Use the local tool (run_tool.bat), which needs no internet, or ask IT to allow this site." };
+    return { title: "Python's standard library could not be loaded", cause: "This site's copy of Python's standard library (py/stdlib.b64.txt) did not arrive intact.", fix: "Press Retry; if it keeps failing, send the report." };
   }
-  if (/No module named 'encodings'/.test(out) || /exit\(1\)/.test(msg)) {
-    const base = "Python started but could not load its standard library (python_stdlib.zip from cdn.jsdelivr.net).";
-    if (good("python_stdlib.zip")) return { title: "Python could not start in this browser",
-      cause: `${base} The connection test has just downloaded that file intact, so the block may be intermittent (for example a filter that releases files after scanning), or the browser reused a bad cached copy.`,
-      fix: "Press Retry. If it fails again, send the report." };
-    return { title: "Python could not start in this browser",
-      cause: `${base} A web filter blocking or replacing zip downloads is the usual reason.`,
-      fix: test ? "Send the report." : "Run the connection test below to see how the filter decides, then send the report." };
+  if (/No module named 'encodings'/.test(out) || /exit\(1\)/.test(msg)) return { title: "Python could not start in this browser",
+    cause: "Python started but could not load its standard library. The site's text copy downloaded, so this may be a stale cached file or a one-off.",
+    fix: "Press Retry. If it fails again, send the report." };
+  if (bad("py/model.b64.txt") || stage === "download model bundle" || stage === "unpack model bundle") {
+    if (textBlocked) return { title: "This network blocks the site's files", cause: "The model file from this site (github.io) did not arrive intact, even as text.", fix: "This usually means github.io is restricted here. Use the local tool (run_tool.bat), or ask IT to allow this site." };
+    return { title: "The model could not be loaded", cause: "This site's model file (py/model.b64.txt) did not arrive intact.", fix: "Press Retry; if it keeps failing, send the report." };
   }
-  if (bad("py/bundle.zip") || stage === "download model bundle" || stage === "unpack model bundle") return { title: "The model could not be loaded",
-    cause: "This site's model bundle (py/bundle.zip) did not arrive intact.", fix: "Send the report; serving the bundle in another form may help." };
-  if (stage === "load packages") return { title: "Python packages could not be loaded",
-    cause: "Python started but numpy, scipy or pandas could not be downloaded from cdn.jsdelivr.net.", fix: "Send the report." };
+  if (stage === "load packages" || (wheelKey && bad(wheelKey))) return { title: "Python packages could not be loaded",
+    cause: "Python started, but a package (numpy, scipy, pandas or a dependency) could not be downloaded from cdn.jsdelivr.net.",
+    fix: "These are the last files still loaded from the CDN; send the report so they can be hosted on the site too." };
   if (stalled) return { title: "Python is taking unusually long to start",
     cause: `Start-up has made no progress for over 90 s (at: ${stalled.stage || "?"}). A web filter holding downloads for scanning can cause this.`,
     fix: "It may still finish. If not, send the report." };
