@@ -95,11 +95,6 @@
       <li>Plant comes from <b>REPD</b> (wind, solar, batteries) and <b>DUKES 5.11</b> (gas, biomass, nuclear, pumped storage). Which farms count as transmission-connected uses connection-voltage thresholds by area plus DUKES' own HV/LV flag, so a few may be on the wrong side of that line. Offshore landing points come from the spec's list where known, otherwise the nearest coast. Demand is split across 49 hand-made regions (shares estimated); embedded wind and solar are placed where REPD says those farms are.</li>
       <li>Internal HVDC links (Western Link etc.) do not change boundary totals in a cut model; their animated flow is a display share of the boundary flow.</li>
     </ul>
-    <div id="diagAbout" class="hidden">
-      <h4>Trouble running it?</h4>
-      <p class="small">This web version runs Python inside your browser. Some work networks block parts of the download. If it fails, you get a report to save as a .txt file.
-        <button id="testBrowserBtn" class="btn small" type="button">Test this browser</button> checks every file the site needs and gives a report you can save as a .txt file. Nothing is sent anywhere.</p>
-    </div>
     <h4>Data</h4>
     <p class="small"><b>All data used is publicly available.</b> Every dataset below is published openly by a public body or
       public project, free to download and reuse (including commercially) under the licence shown, provided the source is
@@ -120,6 +115,9 @@
       neighbouring-market prices, curtailment costs, the synthetic weather, the regional demand split, interconnector and some
       offshore landing points (approximate, from the tool's specification), and pumped-storage energy. The tool is not
       endorsed by NESO or DESNZ.</p>
+    <div id="diagAbout" class="hidden" style="margin-top:14px">
+      <button id="testBrowserBtn" class="btn small" type="button" title="Checks every file the site needs and gives a report you can save as a .txt file">Test this browser</button>
+    </div>
   </div>
 </div>
 
