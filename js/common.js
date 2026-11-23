@@ -75,6 +75,10 @@ export function bodyFromReq(r) {
   };
 }
 
+// Read once at load: the map page rewrites its query string, which would drop this.
+// ?diagtest=cdn|stdlib|bundle makes the static site's Python worker fail on purpose (see deploy/pyworker.js).
+export const DIAGTEST = (() => { try { return new URLSearchParams(location.search).get("diagtest"); } catch (e) { return null; } })();
+
 export async function api(path, body) {
   if (window.GBGFE_STATIC) {                     // GitHub Pages build: no server, see deploy/static_api.js
     const { staticApi } = await import("./static_api.js");

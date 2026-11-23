@@ -1,0 +1,25 @@
+{
+ "build": {
+  "commit": "caa506b",
+  "time": "2026-11-23 12:53 UTC"
+ },
+ "files": {
+  "py/bundle.zip": {
+   "sha256": "f124a50fd66f7a866c8c00f3f875ee11a7afd2d40b389521b72c69611c25b2e9",
+   "bytes": 125943
+  },
+  "diag/probe.zip": {
+   "sha256": "d178cbeca79efc3d5d0938c78f8304eb2b41785029fe06041e3af41b0c4e046c",
+   "bytes": 9774
+  },
+  "diag/probe.bin": {
+   "sha256": "d178cbeca79efc3d5d0938c78f8304eb2b41785029fe06041e3af41b0c4e046c",
+   "bytes": 9774
+  },
+  "diag/probe.txt": {
+   "sha256": "d178cbeca79efc3d5d0938c78f8304eb2b41785029fe06041e3af41b0c4e046c",
+   "bytes": 9774,
+   "note": "hash of the decoded content"
+  }
+ }
+}

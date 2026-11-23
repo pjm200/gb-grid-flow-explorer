@@ -185,3 +185,12 @@ details.adv input[type=range] { width: 130px; accent-color: var(--accent); }
   .config-grid { grid-template-columns: 1fr; }
   .padwrap { justify-self: center; }
 }
+/* diagnostics panel */
+.diag { z-index: 30; }
+.diag-box { max-width: 760px; width: 100%; }
+.diag-title { margin-top: 0; padding-right: 24px; }
+.diag-err { background: #0b1122; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin: 8px 0; white-space: pre-wrap; word-break: break-word; }
+.diag-err details { margin-top: 6px; } .diag-err pre { max-height: 180px; overflow: auto; margin: 4px 0 0; font-size: 11px; }
+.diag-table td:first-child { white-space: normal; } .diag-table td.ok { color: var(--ok); } .diag-table td.bad { color: var(--warn); }
+.diag-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 6px; }
+.diag-actions button:disabled { opacity: .5; cursor: default; }

@@ -1,4 +1,5 @@
 // Main map page: playback, panels, info cards, layer toggles, re-solves and missions.
+import { openDiagPanel } from "./diagnostics.js";
 import { TECH, COUNTRY, ICON, api, reqFromParams, paramsFromReq, bodyFromReq, fmtGW, fmtMW, fmtGBP, esc, hhmm, flagImg, store } from "./common.js";
 import { MapRenderer, PALETTES, boundaryState } from "./render.js";
 import { StackChart, sparkline, MIX_LAYERS, NEG_LAYERS } from "./charts.js";
@@ -452,7 +453,7 @@ async function resolve(label) {
     setSim(sim);
     if (prev && label) compareToast(prev, sim.summary, label);
   } catch (e) {
-    toast(`<b>Simulation failed</b><br>${esc(e.message)}`, "error", 9000);
+    openDiagPanel({ error: e, request: bodyFromReq(st.req), onRetry: () => resolve(null) });   // stays open; report can be saved
   }
   st.busy = false; $("busy").classList.add("hidden");
   if (st.pending) { const l = st.pending; st.pending = false; resolve(l === true ? null : l); }
@@ -569,7 +570,12 @@ function buildControls() {
   mh.onclick = () => setCollapsed(!mh.parentElement.classList.contains("collapsed"));
 
   $("aboutBtn").onclick = $("noticeBtn").onclick = () => $("modal").classList.remove("hidden");
-  if (location.hash === "#about") $("modal").classList.remove("hidden");   // from the weather page's notice
+  if (location.hash === "#about") $("modal").classList.remove("hidden");
+  if (window.GBGFE_STATIC) {
+    $("diagAbout").classList.remove("hidden");
+    $("testBrowserBtn").onclick = () => { $("modal").classList.add("hidden"); openDiagPanel({ testOnly: true }); };
+    import("./static_api.js").then((m) => m.setStallHandler((s) => openDiagPanel({ stalled: s, request: bodyFromReq(st.req) })));
+  }   // from the weather page's notice
   $("modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.closest("[data-close]")) $("modal").classList.add("hidden"); });
 
   $("chartLegend").innerHTML = MIX_LAYERS.map(([, l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join("") +
